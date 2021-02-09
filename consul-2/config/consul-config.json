@@ -1,0 +1,27 @@
+{
+  "server": true,
+  "node_name": "consul-svr3",
+  "datacenter": "consul-dc1",
+  "data_dir": "/consul/data",
+  "bind_addr": "0.0.0.0",
+  "client_addr": "0.0.0.0",
+  "advertise_addr": "10.10.100.22",
+  "bootstrap_expect": 3,
+  "retry_join": [
+    "10.10.100.20",
+    "10.10.100.21",
+    "10.10.100.22"
+  ],
+  "ui": true,
+  "log_level": "DEBUG",
+  "primary_datacenter": "consul-dc1",
+  "acl": {
+    "enabled": true,
+    "default_policy": "deny",
+    "down_policy": "extend-cache",
+    "enable_token_persistence": true,
+    "tokens": {
+      "agent": "4623fe03-d622-9a47-50ce-9d9eb7ddaa50"
+    }
+  }
+}

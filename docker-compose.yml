@@ -1,0 +1,210 @@
+version: '3'
+
+networks:
+  vault-net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.10.100.0/24
+
+services:
+  consul_master:
+    build:
+      context: ./consul
+      dockerfile: Dockerfile
+    ports:
+      - 8500:8500
+    volumes:
+      - ./consul/config/consul-config.json:/consul/config/config.json
+      - ./consul/data:/consul/data
+    command: agent -config-file=/consul/config/config.json
+    networks:
+      vault-net:
+        ipv4_address: 10.10.100.20
+
+  consul_s1:
+    build:
+      context: ./consul
+      dockerfile: Dockerfile
+    ports:
+      - 8501:8500
+    volumes:
+      - ./consul-1/config/consul-config.json:/consul/config/config.json
+      - ./consul-1/data:/consul/data
+    command: agent -config-file=/consul/config/config.json
+    networks:
+      vault-net:
+        ipv4_address: 10.10.100.21
+    depends_on:
+      - consul_master
+
+  consul_s2:
+    build:
+      context: ./consul
+      dockerfile: Dockerfile
+    ports:
+      - 8502:8500
+    volumes:
+      - ./consul-2/config/consul-config.json:/consul/config/config.json
+      - ./consul-2/data:/consul/data
+    command: agent -config-dir=/consul/config/config.json
+    networks:
+      vault-net:
+        ipv4_address: 10.10.100.22
+    depends_on:
+      - consul_master
+
+  agent_a:
+    build:
+      context: ./consul
+      dockerfile: Dockerfile
+    ports:
+      - 8505:8500
+    volumes:
+      - ./agent_a/config/consul-config.json:/consul/config/config.json
+      - ./agent_a/data:/consul/data
+    command: agent -config-file=/consul/config/config.json
+    networks:
+      vault-net:
+        ipv4_address: 10.10.100.23
+    depends_on:
+      - consul_master
+      - consul_s1
+      - consul_s2
+  
+  agent_b:
+    build:
+      context: ./consul
+      dockerfile: Dockerfile
+    ports:
+      - 8506:8500
+    volumes:
+      - ./agent_b/config/consul-config.json:/consul/config/config.json
+      - ./agent_b/data:/consul/data
+    command: agent -config-file=/consul/config/config.json
+    networks:
+      vault-net:
+        ipv4_address: 10.10.100.24
+    depends_on:
+      - consul_master
+      - consul_s1
+      - consul_s2
+
+  vault_main:
+    build:
+      context: ./vault
+      dockerfile: Dockerfile
+    ports:
+      - 8200:8200
+    volumes:
+      - ./vault/config/vault-config.hcl:/vault/config/vault-config.hcl
+      - ./vault/policies:/vault/policies
+      - ./vault/data:/vault/data
+      - ./vault/logs:/vault/logs
+    environment:
+      - VAULT_ADDR=http://10.10.100.10:8200
+      - VAULT_API_ADDR=http://10.10.100.10:8200
+    command: server -config=/vault/config/vault-config.hcl
+    cap_add:
+      - IPC_LOCK
+    networks:
+      vault-net:
+        ipv4_address: 10.10.100.10
+    depends_on:
+      - agent_a
+
+  vault_standby:
+    build:
+      context: ./vault
+      dockerfile: Dockerfile
+    ports:
+      - 8210:8200
+    volumes:
+      - ./vault-1/config/vault-config.hcl:/vault/config/vault-config.hcl
+      - ./vault-1/policies:/vault/policies
+      - ./vault-1/data:/vault/data
+      - ./vault-1/logs:/vault/logs
+    environment:
+      - VAULT_ADDR=http://10.10.100.11:8200
+      - VAULT_API_ADDR=http://10.10.100.11:8200
+    command: server -config=/vault/config/vault-config.hcl
+    cap_add:
+      - IPC_LOCK
+    networks:
+      vault-net:
+        ipv4_address: 10.10.100.11
+    depends_on:
+      - agent_b
+
+  # vault:
+  #   build:
+  #     context: ./vault
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - 8200:8200
+  #   volumes:
+  #     - ./vault/config/vault-config.hcl:/vault/config/vault-config.hcl
+  #     - ./vault/policies:/vault/policies
+  #     - ./vault/data:/vault/data
+  #     - ./vault/logs:/vault/logs
+  #   environment:
+  #     - VAULT_ADDR=http://10.10.100.10:8200
+  #     - VAULT_API_ADDR=http://10.10.100.10:8200
+  #   command: server -config=/vault/config/vault-config.hcl
+  #   cap_add:
+  #     - IPC_LOCK
+  #   depends_on:
+  #     - agent
+  #   links:
+  #     - agent:agent
+
+    # vault:
+    #   build:
+    #     context: ./vault
+    #     dockerfile: Dockerfile
+    #   ports:
+    #     - 8200:8200
+    #   volumes:
+    #     - ./vault/config/vault-config.hcl:/vault/config/vault-config.hcl
+    #     - ./vault/policies:/vault/policies
+    #     - ./vault/data:/vault/data
+    #     - ./vault/logs:/vault/logs
+    #   environment:
+    #     - VAULT_ADDR=http://10.10.100.10:8200
+    #     - VAULT_API_ADDR=http://10.10.100.10:8200
+    #   command: server -config=/vault/config/vault-config.hcl
+    #   cap_add:
+    #     - IPC_LOCK
+    #   depends_on:
+    #     - agent
+    #   links:
+    #     - agent:agent
+
+    # vault_consul:
+    #   build:
+    #     context: ./vault_consul
+    #     dockerfile: Dockerfile
+    #   ports:
+    #     - 8506:8500
+    #     - 8200:8200
+    #   volumes:
+    #     - ./vault_consul/consul_config/consul-config.json:/consul/config/config.json
+    #     - ./vault_consul/consul_data/data:/consul/data
+    #     - ./vault_consul/vault_config/vault-config.hcl:/vault/config/vault-config.hcl
+    #     - ./vault_consul/vault_data:/vault/data
+    #     - ./vault_consul/vault_log:/vault/logs
+    #   environment:
+    #     - VAULT_ADDR=http://10.10.100.10:8200
+    #     - VAULT_API_ADDR=http://10.10.100.10:8200
+    #   command: agent -config-file=/consul/config/config.json
+    #   command: server -config=/vault/config/vault-config.hcl
+    #   cap_add:
+    #     - IPC_LOCK
+    #   networks:
+    #     vault-net:
+    #       ipv4_address: 10.10.100.10
+    #   depends_on:
+    #     - consul_master
+    #     - consul_s1
+    #     - consul_s2

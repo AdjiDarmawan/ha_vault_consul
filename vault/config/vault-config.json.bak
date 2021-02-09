@@ -1,0 +1,33 @@
+{
+    "backend": {
+      "consul": {
+        "address": "consul:8500",
+        "path": "vault/"
+      }
+    },
+    "listener": {
+      "tcp":{
+        "address": "0.0.0.0:8200",
+        "cluster_address": "10.10.100.10:8201",
+        "tls_disable": 1
+      }
+    },
+    "ui": true
+    "api_addr": "http://10.10.100.10:8200"
+    "http://10.10.100.10:8201"
+}
+
+{
+  "backend": {
+    "file": {
+      "path": "vault/data"
+    }
+  },
+  "listener": {
+    "tcp": {
+      "address": "0.0.0.0:8200",
+      "tls_disable": 1
+    }
+  },
+  "ui": true
+}
