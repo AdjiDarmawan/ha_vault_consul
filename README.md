@@ -17,5 +17,5 @@ This is PoC How to Create Vault HA and Consul Cluster using Docker Compose.
 ![](https://img.shields.io/github/stars/pandao/editor.md.svg) ![](https://img.shields.io/github/forks/pandao/editor.md.svg) ![](https://img.shields.io/github/tag/pandao/editor.md.svg) ![](https://img.shields.io/github/release/pandao/editor.md.svg) ![](https://img.shields.io/github/issues/pandao/editor.md.svg) ![](https://img.shields.io/bower/v/editor.md.svg)
 
 # References
-https://learn.hashicorp.com/tutorials/vault/ha-with-consul
-https://learn.hashicorp.com/tutorials/vault/configure-vault?in=vault/operations
+- https://learn.hashicorp.com/tutorials/vault/ha-with-consul
+- https://learn.hashicorp.com/tutorials/vault/configure-vault?in=vault/operations
